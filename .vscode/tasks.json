@@ -1,0 +1,62 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "build source",
+			"command": "cl.exe",
+			"args": [
+				// "/Zi",
+				"/EHsc",
+				"/D_UNICODE",
+				"/DUNICODE",
+				"/DWIN32",
+				"/D_WINDOWS",
+				// "/c",
+				"/Fe:",
+				"${workspaceFolder}\\build\\winWin.exe",
+				"${workspaceFolder}\\src\\source.cpp",
+				"/link",
+				"/ENTRY:WinMainCRTStartup ",
+				"/SUBSYSTEM:WINDOWS",
+				"gdi32.lib",
+				"user32.lib",
+				"comdlg32.lib",
+				
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		},
+		{
+			"type": "shell",
+			"label": "build test2",
+			"command": "cl.exe",
+			"args": [
+				// "/Zi",
+				"/EHsc",
+				"/D_UNICODE",
+				"/DUNICODE",
+				"/DWIN32",
+				"/D_WINDOWS",
+				// "/c",
+				"/Fe:",
+				"${workspaceFolder}\\build\\winWin2.exe",
+				"${workspaceFolder}\\src\\test2.cpp",
+				"/link",
+				// "/ENTRY:main ",
+				// "/SUBSYSTEM:CONSOLE",
+				"gdi32.lib",
+				"user32.lib",
+				"comdlg32.lib",
+				"Gdiplus.lib"
+				
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		}
+	]
+}

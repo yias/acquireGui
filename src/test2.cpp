@@ -1,7 +1,7 @@
 
 
 #include <windows.h>
-#include <stdlib.h>
+// #include <stdlib.h>
 // #include <string.h>
 #include <string>
 #include <tchar.h>
@@ -107,13 +107,10 @@ int main(){
 
     UpdateWindow(hWnd);
 
-    int counter =0;
     MSG msg;
     while(GetMessage(&msg, NULL, 0, 0)){
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        std::cout << counter << "\n";
-        counter++;
     }
 
     Gdiplus::GdiplusShutdown(gdiplusToken);

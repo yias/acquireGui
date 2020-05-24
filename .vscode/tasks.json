@@ -57,6 +57,37 @@
 				"$msCompile"
 			],
 			"group": "build"
+		},
+		{
+			"type": "shell",
+			"label": "build gui test source",
+			"command": "cl.exe",
+			"args": [
+				// "/Zi",
+				"/EHsc",
+				"/D_UNICODE",
+				"/DUNICODE",
+				"/DWIN32",
+				"/D_WINDOWS",
+				"-I", "${workspaceFolder}\\include",
+				// "/c",
+				"/Fe:",
+				"${workspaceFolder}\\build\\acquireGui.exe",
+				"${workspaceFolder}\\src\\test_source.cpp",
+				"${workspaceFolder}\\src\\acquireGui.cpp",
+				"/link",
+				// "/ENTRY:main ",
+				// "/SUBSYSTEM:CONSOLE",
+				"gdi32.lib",
+				"user32.lib",
+				"comdlg32.lib",
+				"Gdiplus.lib"
+				
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
 		}
 	]
 }

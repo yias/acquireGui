@@ -2,7 +2,8 @@
 
 #include <windows.h>
 #include <stdlib.h>
-#include <string.h>
+// #include <string.h>
+#include <string>
 #include <tchar.h>
 
 #include <Gdiplus.h>
@@ -21,21 +22,31 @@
 // Forward declarations of functions included in this code module:
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-int makePlot(HDC hdc, int cornerRight, int cornerBottom, int width, int height, std::vector<double> data);
+int makePlot(HDC hdc, int cornerRight, int cornerBottom, int width, int height, std::vector<int> bkdColor, int pltNB, std::vector<double> data);
 
 VOID OnPaint(HDC hdc, int startingPoint_x, int startingPoint_y, int endingPoint_x, int endingPoint_y, int lineWidth, int alpha, std::vector<int> color);
+
+void paintBkd(HDC hdc, int rightCorner, int bottomCorner);
 
 HINSTANCE hInst;
 HBRUSH hbrGray;
 
-int nbPlots_Ver = 4;
+int nbPlots_Ver = 1;
 int nbPlots_Hor = 1;
+
+std::vector< std::vector<int> > plotClrs;
 
 // int WINAPI main(_In_ HINSTANCE hInstance,
 //    _In_opt_ HINSTANCE hPrevInstance,
 //    _In_ LPSTR     lpCmdLine,
 //    _In_ int       nCmdShow){
 int main(){
+
+    std::vector<int> clr1 = {255 , 10, 53, 66};
+    std::vector<int> clr2 = {255 , 5, 46, 59};
+
+    plotClrs.push_back(clr1);
+    plotClrs.push_back(clr2);
 
     FreeConsole();
 
@@ -61,7 +72,8 @@ int main(){
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = NULL;
-    wcex.hIcon = LoadIcon(hInst, IDI_APPLICATION);
+    wcex.hIcon = LoadIcon(NULL, IDI_HAND); // IDI_APPLICATION
+    // wcex.hIcon = (HICON)LoadImageA(NULL, "C:\\Users\\yias4\\Documents\\drawings\\acquire_gui\\ac_icon2.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED); // IDI_APPLICATION
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH); //(COLOR_WINDOW+1); //CreateSolidBrush(0x000000ff);
     wcex.lpszMenuName = NULL;
@@ -129,15 +141,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     int steps_on_y = 0;
 
+    int plt_counter = 0;
+    // HICON hIcon = LoadIcon(NULL, IDI_ASTERISK);
+    HICON hIcon = (HICON)LoadImageA(NULL, "C:\\Users\\yias4\\Documents\\drawings\\acquire_gui\\acquire_icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE ); // IDI_APPLICATION
+    // SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+
     std::vector<double> tmp={1,2,3,4};
 
     switch (message)
     {
     case WM_PAINT:
         hdc = BeginPaint(hWnd, &ps);
-
+        SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
         
-
         // Here your application is laid out.
 
         // apply a scaling transformation
@@ -147,28 +163,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         xForm.eM22 = (FLOAT) 0.5; 
         xForm.eDx  = (FLOAT) 0.0; 
         xForm.eDy  = (FLOAT) 0.0;
-        SetWorldTransform(hdc, &xForm); 
+        SetWorldTransform(hdc, &xForm);
 
-        GetClientRect(hWnd, (LPRECT) &rect); 
+        GetClientRect(hWnd, (LPRECT) &rect);
         DPtoLP(hdc, (LPPOINT) &rect, 2); 
+
+        paintBkd(hdc, rect.right, rect.bottom);
+
+        rightPlane_l = rect.right / 7;
         
         steps_on_x = (rect.right - rightPlane_l) / nbPlots_Hor;
         steps_on_y = (rect.bottom - bottomPlane_h) / nbPlots_Ver;
 
+
         for (int j=0; j<nbPlots_Ver; j++){
             for (int i=0; i<nbPlots_Hor; i++){
-                makePlot(hdc, rect.right - ((i+1)*steps_on_x + rightPlane_l), rect.bottom - ((j+1)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, tmp);
+                makePlot(hdc, rect.right - ((nbPlots_Hor-i)*steps_on_x + rightPlane_l), rect.bottom - ((nbPlots_Ver-j)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, plotClrs[j % 2], plt_counter +1,  tmp);
+                plt_counter++;
             }
         }
         
-
-        // TextOut(hdc, ((rect.right / 25) + (rect.right - 20))/2 - 10, (rect.bottom / 20) - 21, title, _tcslen(title));
-        // Rectangle(hdc,  (rect.right / 25), 
-        //                 (rect.bottom / 20),
-        //                 (rect.right - 20), 
-        //                 (rect.bottom /20) + minPlotHeight);
-        
-        // TextOut(hdc, (rect.right / 25) - 30 , (rect.bottom / 20) + (minPlotHeight / 2) - 10, units, _tcslen(units));
         // End application-specific layout section.
 
         EndPaint(hWnd, &ps);
@@ -184,9 +198,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-int makePlot(HDC hdc, int cornerLeft, int cornerBottom, int width, int height, std::vector<double> data){
+int makePlot(HDC hdc, int cornerLeft, int cornerBottom, int width, int height, std::vector<int> bkdColor, int pltNB, std::vector<double> data){
 
     TCHAR plotTitle[] = L"Channel ";
+    wcscat(plotTitle, std::to_wstring(pltNB).c_str());
     TCHAR plotUnits[] = L"mV";
     TCHAR plotZero[] = L"0";
 
@@ -205,18 +220,9 @@ int makePlot(HDC hdc, int cornerLeft, int cornerBottom, int width, int height, s
     SelectObject(hdc, GetStockObject(DC_BRUSH));
 
     // set the brush color
-    SetDCBrushColor(hdc, RGB(0,51,102));
+    SetDCBrushColor(hdc, RGB(bkdColor[1], bkdColor[2], bkdColor[3]));
 
     SelectObject(hdc, GetStockObject(DC_PEN));
-
-    // Set the pen color
-    SetDCPenColor(hdc, RGB(0,51,102)); //0,51,102 , 50,80,120
-
-    Rectangle(hdc, cornerLeft, cornerBottom, cornerLeft + width, cornerBottom + height);
-
-    SelectObject(hdc,original_pen);
-
-    // SelectObject(hdc,original);
 
     int maxPlotLength = 0;
     int minPlotLength = 200;
@@ -229,22 +235,36 @@ int makePlot(HDC hdc, int cornerLeft, int cornerBottom, int width, int height, s
     int boxWidth = ((width > minPlotLength) ? width : minPlotLength) - 40;
     int boxHeight = ((height > minPlotHeight) ? height : minPlotHeight) - 50;
     
+
     // SetDCPenColor(hdc, RGB(0,0,102)); //0,51,102 , 50,80,120
+    // display title
     hFont = CreateFont(20,0,0,0, FW_SEMIBOLD, 0,0,0,0,0,0,2,0, L"SYSTEM_FIXED_FONT");
     hTmp = (HFONT)SelectObject(hdc, hFont);
     SetBkMode(hdc, TRANSPARENT);
-    TextOut(hdc, boxLeftCornter_x + (boxWidth / 2), cornerBottom + 10 , plotTitle, _tcslen(plotTitle));
-    
+    SetTextColor(hdc, RGB(205, 207, 208));
+    TextOut(hdc, boxLeftCornter_x + (boxWidth / 2) - (_tcslen(plotTitle) * 10 * 0.5) , cornerBottom + 10 , plotTitle, _tcslen(plotTitle));
+    DeleteObject(SelectObject(hdc,hTmp));
 
-    SetDCBrushColor(hdc, RGB(0,25,51));
+
+    // display data rectangle
+    // SetDCBrushColor(hdc, RGB(51,92,100));
     Rectangle(hdc,  boxLeftCornter_x, 
                     boxLeftCornter_y,
                     boxLeftCornter_x + boxWidth, 
                     boxLeftCornter_y + boxHeight);
-        
-    TextOut(hdc, cornerLeft + 1, boxLeftCornter_y + 3, plotUnits, _tcslen(plotUnits));
+    
+    // display units
+    hFont = CreateFont(15,0,0,0, FW_SEMIBOLD, 0,0,0,0,0,0,2,0, L"ARIAL");
+    hTmp = (HFONT)SelectObject(hdc, hFont);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(80, 114, 130));
+    TextOut(hdc, boxLeftCornter_x - (_tcslen(plotUnits)*12) , boxLeftCornter_y - 5, plotUnits, _tcslen(plotUnits));
+
+    // display zero line unit
     TextOut(hdc, boxLeftCornter_x - 13, boxLeftCornter_y + (boxHeight / 2) - 8, plotZero, _tcslen(plotZero));
-    std::vector<int> h_line_clr = {200, 200, 200};
+
+    // display zero line
+    std::vector<int> h_line_clr = {80, 114, 130};
     OnPaint(hdc, boxLeftCornter_x, boxLeftCornter_y + (boxHeight / 2), boxLeftCornter_x + boxWidth - 1 , boxLeftCornter_y + (boxHeight / 2), 1, 100, h_line_clr);
 
     DeleteObject(SelectObject(hdc,hTmp));
@@ -259,4 +279,28 @@ VOID OnPaint(HDC hdc, int startingPoint_x, int startingPoint_y, int endingPoint_
     Gdiplus::Graphics graphics(hdc);
     Gdiplus::Pen      pen(Gdiplus::Color(alpha, color[0], color[1], color[2]), lineWidth);
     graphics.DrawLine(&pen, startingPoint_x, startingPoint_y, endingPoint_x, endingPoint_y);
+}
+
+void paintBkd(HDC hdc, int rightCorner, int bottomCorner){
+
+    Gdiplus::Graphics graphics(hdc);
+
+    Gdiplus::LinearGradientBrush linGrBrush(
+    Gdiplus::Point(0, 0),
+    Gdiplus::Point(rightCorner +  (bottomCorner * std::tan(26.5)), bottomCorner), // rightCorner+(bottomCorner/2), bottomCorner // * (1 + std::tan(26.5))
+    Gdiplus::Color(255, 10, 53, 66),   // opaque blue
+    Gdiplus::Color(255, 21, 0, 42));  // opaque green
+
+    Gdiplus::REAL relativeIntensities[] = {0.0f, 0.0f, 1.0f, 1.0f};
+    Gdiplus::REAL relativePositions[]   = {0.0f, 0.7f, 0.8f, 0.8f};
+
+    linGrBrush.SetBlend(relativeIntensities, relativePositions, 3);
+
+
+    // Gdiplus::Pen pen(&linGrBrush);
+
+    graphics.FillRectangle(&linGrBrush, 0, 0, rightCorner, bottomCorner);
+
+
+
 }

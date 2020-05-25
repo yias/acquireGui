@@ -36,6 +36,12 @@
         "xstddef": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "cctype": "cpp",
+        "chrono": "cpp",
+        "mutex": "cpp",
+        "ratio": "cpp",
+        "string": "cpp",
+        "thread": "cpp"
     }
 }

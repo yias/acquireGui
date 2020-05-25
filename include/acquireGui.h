@@ -19,10 +19,23 @@ const int DEFAULT_NB_VER_PLOTS = 1; // default number of plots vertically
 const int DEFAULT_NB_HOR_PLOTS = 1; // default number of plots horizontally
 
 
+enum{
+    BNID_RECORD=200,
+    BNID_BACK,
+    BNID_MERGE,
+    BNID_PUBLISH,
+    WNID_RIGHTPANEL
+};
+
 class acqGui{
 
     HINSTANCE hInst;                                        // instance of the windows
-    HWND hWnd;
+    HWND hWnd;                                              // the main window
+    HWND rightPanelWnd;                                     // the right panel window
+    HWND recordButton;                                      // the window of the record button
+    HWND mergeButton;                                       // the window of the merge button
+
+
     HBRUSH hbrGray;
 
     std::vector< std::vector<int> > plotClrs;               // background colors of the plots
@@ -35,6 +48,7 @@ class acqGui{
 
     bool isGuiRunning;
     bool terminateWindow;
+    bool isFirstMsg;
 
     std::vector< std::vector<double> > dataBuffer;          // buffer of the data to plot
     int maxNbSamples;                                       // maximum number of samples to keep in the buffer
@@ -58,6 +72,18 @@ class acqGui{
 
     // GUI handler
     int guiHandler();
+
+    // create initial lay-out
+    int onCreate(HWND hWnd);
+
+    // handle changes on size
+    int paintHandler(HWND hWnd);
+
+    // create right panel
+    int createRightPanel(HWND hWnd, POINT startPoint);
+
+    // moving right panel
+    int moveRightPanel(HWND hWnd, int leftPos, int topPos);
 
     
 

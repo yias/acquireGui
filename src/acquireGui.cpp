@@ -11,6 +11,7 @@ acqGui::acqGui(){
     nbPlots_Ver = DEFAULT_NB_VER_PLOTS;
     nbPlots_Hor = DEFAULT_NB_HOR_PLOTS;
     terminateWindow = false;
+    isFirstMsg = true;
 
 }
 
@@ -38,11 +39,9 @@ LRESULT acqGui::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     int steps_on_y = 0;
 
     int plt_counter = 0;
-    // HICON hIcon = LoadIcon(NULL, IDI_ASTERISK);
-    HICON hIcon = (HICON)LoadImageA(NULL, "C:\\Users\\yias4\\Documents\\drawings\\acquire_gui\\acquire_icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE ); // IDI_APPLICATION
-    // SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 
-    // std::vector<double> tmp={1,2,3,4};
+    POINT rPanelSPoint;
+    
 
     if(terminateWindow){
         message = WM_DESTROY;
@@ -50,48 +49,57 @@ LRESULT acqGui::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
+
+    case WM_CREATE:
+
+        onCreate(hWnd);
+        break;
     case WM_PAINT:
-        hdc = BeginPaint(hWnd, &ps);
-        SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-        
-        // Here your application is laid out.
-
-        // apply a scaling transformation
-        xForm.eM11 = (FLOAT) 0.5; 
-        xForm.eM12 = (FLOAT) 0.0; 
-        xForm.eM21 = (FLOAT) 0.0; 
-        xForm.eM22 = (FLOAT) 0.5; 
-        xForm.eDx  = (FLOAT) 0.0; 
-        xForm.eDy  = (FLOAT) 0.0;
-        SetWorldTransform(hdc, &xForm);
-
-        GetClientRect(hWnd, (LPRECT) &rect);
-        DPtoLP(hdc, (LPPOINT) &rect, 2); 
-
-        paintBkd(hdc, rect.right, rect.bottom);
-
-        rightPlane_l = rect.right / 7;
-
-        std::cout << nbPlots_Hor << ", " << nbPlots_Ver << std::endl;
-        
-        steps_on_x = (rect.right - rightPlane_l) / nbPlots_Hor;
-        steps_on_y = (rect.bottom - bottomPlane_h) / nbPlots_Ver;
-
-        
-        for (int j=0; j<nbPlots_Ver; j++){
-            for (int i=0; i<nbPlots_Hor; i++){
-                if (dataBuffer.size()>0){
-                    makePlot(hdc, rect.right - ((nbPlots_Hor-i)*steps_on_x + rightPlane_l), rect.bottom - ((nbPlots_Ver-j)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, plotClrs[j % 2], plt_counter +1,  dataBuffer[plt_counter]);
-                }else{
-                    makePlot(hdc, rect.right - ((nbPlots_Hor-i)*steps_on_x + rightPlane_l), rect.bottom - ((nbPlots_Ver-j)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, plotClrs[j % 2], plt_counter +1,  std::vector<double>(3,0));
-                }
-                plt_counter++;
-            }
+        if(isFirstMsg){
+            SendMessageA(hWnd, WM_CREATE, wParam,lParam);
+            isFirstMsg = false;
+            break;
         }
+        paintHandler(hWnd);
+        // hdc = BeginPaint(hWnd, &ps);
         
-        // End application-specific layout section.
+        // // Here your application is laid out.
+        // // std::cout << "test2\n";
+        // // apply a scaling transformation
+        // xForm.eM11 = (FLOAT) 0.5; 
+        // xForm.eM12 = (FLOAT) 0.0; 
+        // xForm.eM21 = (FLOAT) 0.0; 
+        // xForm.eM22 = (FLOAT) 0.5; 
+        // xForm.eDx  = (FLOAT) 0.0; 
+        // xForm.eDy  = (FLOAT) 0.0;
+        // SetWorldTransform(hdc, &xForm);
 
-        EndPaint(hWnd, &ps);
+        // GetClientRect(hWnd, (LPRECT) &rect);
+        // DPtoLP(hdc, (LPPOINT) &rect, 2); 
+
+        // paintBkd(hdc, rect.right, rect.bottom);
+
+        // rightPlane_l = rect.right / 7;
+        
+        // steps_on_x = (rect.right - rightPlane_l) / nbPlots_Hor;
+        // steps_on_y = (rect.bottom - bottomPlane_h) / nbPlots_Ver;
+
+        
+        // for (int j=0; j<nbPlots_Ver; j++){
+        //     for (int i=0; i<nbPlots_Hor; i++){
+        //         if (dataBuffer.size()>0){
+        //             makePlot(hdc, rect.right - ((nbPlots_Hor-i)*steps_on_x + rightPlane_l), rect.bottom - ((nbPlots_Ver-j)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, plotClrs[j % 2], plt_counter +1,  dataBuffer[plt_counter]);
+        //         }else{
+        //             makePlot(hdc, rect.right - ((nbPlots_Hor-i)*steps_on_x + rightPlane_l), rect.bottom - ((nbPlots_Ver-j)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, plotClrs[j % 2], plt_counter +1,  std::vector<double>(3,0));
+        //         }
+        //         plt_counter++;
+        //     }
+        // }
+
+        
+        // // End application-specific layout section.
+
+        // EndPaint(hWnd, &ps);
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
@@ -101,7 +109,7 @@ LRESULT acqGui::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
 
-    return 0;
+    return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 int acqGui::makePlot(HDC hdc, int cornerLeft, int cornerBottom, int width, int height, std::vector<int> bkdColor, int pltNB, std::vector<double> data){
@@ -110,8 +118,6 @@ int acqGui::makePlot(HDC hdc, int cornerLeft, int cornerBottom, int width, int h
     wcscat(plotTitle, std::to_wstring(pltNB).c_str());
     TCHAR plotUnits[] = L"mV";
     TCHAR plotZero[] = L"0";
-
-    std::cout << "test1\n";
 
     //    Initializing original object
     HGDIOBJ original_brush = NULL;
@@ -122,8 +128,6 @@ int acqGui::makePlot(HDC hdc, int cornerLeft, int cornerBottom, int width, int h
     //    Saving the original object
     original_brush = SelectObject(hdc,GetStockObject(DC_BRUSH));
     original_pen = SelectObject(hdc,GetStockObject(DC_PEN));
-
-    // Rectangle(hdc, cornerLeft, cornerBottom, cornerLeft + 20, cornerBottom + 20);
 
     SelectObject(hdc, GetStockObject(DC_BRUSH));
 
@@ -209,8 +213,165 @@ void acqGui::paintBkd(HDC hdc, int rightCorner, int bottomCorner){
 
     graphics.FillRectangle(&linGrBrush, 0, 0, rightCorner, bottomCorner);
 
+}
 
 
+int acqGui::onCreate(HWND hWnd){
+
+    PAINTSTRUCT ps;
+    HDC hdc;
+    RECT rect;
+    POINT rPanelSPoint;
+
+    hdc = BeginPaint(hWnd, &ps);
+    GetClientRect(hWnd, (LPRECT) &rect);
+    DPtoLP(hdc, (LPPOINT) &rect, 2); 
+
+    paintBkd(hdc, rect.right, rect.bottom);
+
+    int rightPlane_l = rect.right / 7;
+
+    
+    rPanelSPoint.x = rect.right - rightPlane_l;
+    rPanelSPoint.y = 40;
+    createRightPanel(hWnd, rPanelSPoint);
+
+    EndPaint(hWnd, &ps);
+    return 0;
+}
+
+
+
+int acqGui::createRightPanel(HWND hWnd, POINT startPoint){
+
+    int rightPlaneOffset_x = 30;
+    int vertal_offset = 30;
+    int buttonLength = 100;
+    int buttonHeight = 50;
+  
+    recordButton = CreateWindowEx(WS_EX_LEFT,
+                                        L"BUTTON",
+                                        L"Record",
+                                        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                        startPoint.x + rightPlaneOffset_x, startPoint.y , buttonLength, buttonHeight,
+                                        hWnd,
+                                        (HMENU) BNID_RECORD,
+                                        hInst,
+                                        NULL);
+
+    CreateWindowEx(0,
+                    L"BUTTON",
+                    L"Merge",
+                    WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                    startPoint.x + rightPlaneOffset_x, startPoint.y + buttonHeight + vertal_offset, buttonLength, buttonHeight,
+                    hWnd,
+                    (HMENU) BNID_MERGE,
+                    hInst,
+                    NULL);
+    
+    CreateWindow(L"BUTTON",
+                    L"Publish",
+                    WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                    startPoint.x + rightPlaneOffset_x, startPoint.y + 2*(buttonHeight + vertal_offset), buttonLength, buttonHeight,
+                    hWnd,
+                    (HMENU) BNID_PUBLISH,
+                    hInst,
+                    NULL);
+
+    
+    CreateWindow(L"BUTTON",
+                    L"Back",
+                    WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                    startPoint.x + rightPlaneOffset_x, startPoint.y + 3*(buttonHeight + vertal_offset), buttonLength, buttonHeight,
+                    hWnd,
+                    (HMENU) BNID_BACK,
+                    hInst,
+                    NULL);
+
+    return 0;
+}
+
+int acqGui::paintHandler(HWND hWnd){
+
+        PAINTSTRUCT ps;
+
+        HDC hdc = BeginPaint(hWnd, &ps);
+        XFORM xForm;
+        RECT rect;
+        TCHAR title[] = L"Channel ";
+        TCHAR units[] = L"mV";
+        int bottomPlane_h = 20;
+        int rightPlaneOffset_x = 30;
+
+        // Here your application is laid out.
+        // std::cout << "test2\n";
+        // apply a scaling transformation
+        xForm.eM11 = (FLOAT) 0.5; 
+        xForm.eM12 = (FLOAT) 0.0; 
+        xForm.eM21 = (FLOAT) 0.0; 
+        xForm.eM22 = (FLOAT) 0.5; 
+        xForm.eDx  = (FLOAT) 0.0; 
+        xForm.eDy  = (FLOAT) 0.0;
+        SetWorldTransform(hdc, &xForm);
+
+        GetClientRect(hWnd, (LPRECT) &rect);
+        DPtoLP(hdc, (LPPOINT) &rect, 2); 
+
+        int rightPlane_l = rect.right / 7;
+
+        // move right pannel
+        moveRightPanel(hWnd, rect.right - rightPlane_l + rightPlaneOffset_x, 40);
+
+        // paint the backgound
+        paintBkd(hdc, rect.right, rect.bottom);
+
+        
+        int steps_on_x = (rect.right - rightPlane_l) / nbPlots_Hor;
+        int steps_on_y = (rect.bottom - bottomPlane_h) / nbPlots_Ver;
+
+        int plt_counter = 0;
+        for (int j=0; j<nbPlots_Ver; j++){
+            for (int i=0; i<nbPlots_Hor; i++){
+                if (dataBuffer.size()>0){
+                    makePlot(hdc, rect.right - ((nbPlots_Hor-i)*steps_on_x + rightPlane_l), rect.bottom - ((nbPlots_Ver-j)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, plotClrs[j % 2], plt_counter +1,  dataBuffer[plt_counter]);
+                }else{
+                    makePlot(hdc, rect.right - ((nbPlots_Hor-i)*steps_on_x + rightPlane_l), rect.bottom - ((nbPlots_Ver-j)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, plotClrs[j % 2], plt_counter +1,  std::vector<double>(3,0));
+                }
+                plt_counter++;
+            }
+        }
+        
+        // End application-specific layout section.
+
+        EndPaint(hWnd, &ps);
+
+    return 0;
+}
+
+
+int acqGui::moveRightPanel(HWND hWnd, int leftPos, int topPos){
+
+    int vertal_offset = 30;
+    int buttonLength = 100;
+    int buttonHeight = 50;
+
+    // move record button
+    HWND bhndr = GetDlgItem(hWnd, BNID_RECORD);
+    SetWindowPos(bhndr, NULL, leftPos,  topPos, 3, 3, SWP_NOSIZE);
+    
+    // move merge button
+    bhndr = GetDlgItem(hWnd, BNID_MERGE);
+    SetWindowPos(bhndr, NULL, leftPos, topPos + buttonHeight + vertal_offset, 3, 3, SWP_NOSIZE);
+
+    // move publish button
+    bhndr = GetDlgItem(hWnd, BNID_PUBLISH);
+    SetWindowPos(bhndr, NULL, leftPos, topPos + 2*(buttonHeight + vertal_offset), 3, 3, SWP_NOSIZE);
+
+    // move back button
+    bhndr = GetDlgItem(hWnd, BNID_BACK);
+    SetWindowPos(bhndr, NULL, leftPos, topPos + 3*(buttonHeight + vertal_offset), 3, 3, SWP_NOSIZE);
+
+    return 0;
 }
 
 
@@ -284,7 +445,7 @@ int acqGui::guiHandler(){
 
     const wchar_t CLASS_NAME[]  = L"Sample Window Class";
 
-    const wchar_t szTitle[] = L"emgAcquire";
+    const wchar_t szTitle[] = L"Acquire";
 
     // Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     // ULONG_PTR gdiplusToken;
@@ -304,8 +465,8 @@ int acqGui::guiHandler(){
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInst;
-    wcex.hIcon = LoadIcon(NULL, IDI_HAND); // IDI_APPLICATION
-    // wcex.hIcon = (HICON)LoadImageA(NULL, "C:\\Users\\yias4\\Documents\\drawings\\acquire_gui\\ac_icon2.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED); // IDI_APPLICATION
+    // wcex.hIcon = LoadIcon(NULL, IDI_APPLICATION); // IDI_APPLICATION
+    wcex.hIcon = (HICON)LoadImageA(NULL, "icons\\acquire_icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED); // IDI_APPLICATION
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH); //(COLOR_WINDOW+1); //CreateSolidBrush(0x000000ff);
     wcex.lpszMenuName = NULL;
@@ -318,14 +479,17 @@ int acqGui::guiHandler(){
         return -1;
     }
 
-    hWnd = CreateWindowEx(WS_EX_LEFT, //WS_EX_LEFT,  //, WS_OVERLAPPEDWINDOW
-                                CLASS_NAME, 
-                                szTitle, 
-                                WS_TILEDWINDOW,  // WS_TILEDWINDOW
-                                300, 300, 800, 600, 
-                                NULL, NULL,
-                                NULL, // hInst
-                                NULL);
+    int desktopwidth=GetSystemMetrics(SM_CXSCREEN);
+    int desktopheight=GetSystemMetrics(SM_CYSCREEN);
+
+    hWnd = CreateWindowEx(0, //WS_EX_LEFT,  //, WS_OVERLAPPEDWINDOW, WS_EX_APPWINDOW
+                        CLASS_NAME, 
+                        szTitle, 
+                        WS_OVERLAPPEDWINDOW | WS_EX_RIGHTSCROLLBAR,  // WS_TILEDWINDOW
+                        desktopwidth / 4, desktopheight / 4, 800, nbPlots_Ver*300, 
+                        NULL, NULL,
+                        hInst, // hInst
+                        NULL);
     
     if (!hWnd){
         MessageBox(NULL,
@@ -340,7 +504,11 @@ int acqGui::guiHandler(){
 
     ShowWindow(hWnd, SW_RESTORE);
 
+    
+
     UpdateWindow(hWnd);
+
+    
 
     isGuiRunning = true;
 
@@ -363,12 +531,14 @@ LRESULT CALLBACK acqGui::staticWndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPAR
 
     // Retrieve instance pointer
     acqGui* pWnd = reinterpret_cast<acqGui*>(GetWindowLongPtrW(hwnd, 0));
-    if ( pWnd != NULL )  // See Note 1 below
+    if ( pWnd != NULL ){  // See Note 1 below
         // Call member function if instance is available
         return pWnd->WndProc(hwnd, uMsg, wParam, lParam);
-    else
+    }
+    else{
         // Otherwise perform default message handling
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
 
 }
 

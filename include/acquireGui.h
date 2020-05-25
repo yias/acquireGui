@@ -49,6 +49,7 @@ class acqGui{
     bool isGuiRunning;
     bool terminateWindow;
     bool isFirstMsg;
+    bool isRecording;
 
     std::vector< std::vector<double> > dataBuffer;          // buffer of the data to plot
     int maxNbSamples;                                       // maximum number of samples to keep in the buffer
@@ -69,6 +70,12 @@ class acqGui{
 
     // paint the background of a rectange
     void paintBkd(HDC hdc, int rightCorner, int bottomCorner);
+
+    // draw and erase record rectangle
+    void drawRecordRectangle(HDC hdc, int leftTop, int leftBottom, int width, int height);
+    void drawRecordRectangle(HWND hWnd);
+    void eraseRecordRectangle(HWND hWnd);
+
 
     // GUI handler
     int guiHandler();

@@ -12,6 +12,7 @@ acqGui::acqGui(){
     nbPlots_Hor = DEFAULT_NB_HOR_PLOTS;
     terminateWindow = false;
     isFirstMsg = true;
+    isRecording = false;
 
 }
 
@@ -51,9 +52,9 @@ LRESULT acqGui::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
 
     case WM_CREATE:
-
         onCreate(hWnd);
         break;
+    
     case WM_PAINT:
         if(isFirstMsg){
             SendMessageA(hWnd, WM_CREATE, wParam,lParam);
@@ -61,49 +62,39 @@ LRESULT acqGui::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
         paintHandler(hWnd);
-        // hdc = BeginPaint(hWnd, &ps);
-        
-        // // Here your application is laid out.
-        // // std::cout << "test2\n";
-        // // apply a scaling transformation
-        // xForm.eM11 = (FLOAT) 0.5; 
-        // xForm.eM12 = (FLOAT) 0.0; 
-        // xForm.eM21 = (FLOAT) 0.0; 
-        // xForm.eM22 = (FLOAT) 0.5; 
-        // xForm.eDx  = (FLOAT) 0.0; 
-        // xForm.eDy  = (FLOAT) 0.0;
-        // SetWorldTransform(hdc, &xForm);
-
-        // GetClientRect(hWnd, (LPRECT) &rect);
-        // DPtoLP(hdc, (LPPOINT) &rect, 2); 
-
-        // paintBkd(hdc, rect.right, rect.bottom);
-
-        // rightPlane_l = rect.right / 7;
-        
-        // steps_on_x = (rect.right - rightPlane_l) / nbPlots_Hor;
-        // steps_on_y = (rect.bottom - bottomPlane_h) / nbPlots_Ver;
-
-        
-        // for (int j=0; j<nbPlots_Ver; j++){
-        //     for (int i=0; i<nbPlots_Hor; i++){
-        //         if (dataBuffer.size()>0){
-        //             makePlot(hdc, rect.right - ((nbPlots_Hor-i)*steps_on_x + rightPlane_l), rect.bottom - ((nbPlots_Ver-j)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, plotClrs[j % 2], plt_counter +1,  dataBuffer[plt_counter]);
-        //         }else{
-        //             makePlot(hdc, rect.right - ((nbPlots_Hor-i)*steps_on_x + rightPlane_l), rect.bottom - ((nbPlots_Ver-j)*steps_on_y + bottomPlane_h), steps_on_x, steps_on_y, plotClrs[j % 2], plt_counter +1,  std::vector<double>(3,0));
-        //         }
-        //         plt_counter++;
-        //     }
-        // }
-
-        
-        // // End application-specific layout section.
-
-        // EndPaint(hWnd, &ps);
         break;
+
+    case WM_COMMAND:
+        switch(LOWORD(wParam)){
+            case BNID_RECORD:
+                if(isRecording){
+                    isRecording = false;
+                    eraseRecordRectangle(hWnd);
+                    std::cout << "stop recording\n";
+                }else{
+                    isRecording = true;
+                    drawRecordRectangle(hWnd);
+                    std::cout << "start recording\n";
+                }
+                break;
+            case BNID_MERGE:
+                std::cout << "merge clicked\n";
+                break;
+            case BNID_BACK:
+                std::cout << "back click\n";
+                break;
+            case BNID_PUBLISH:
+                std::cout << "publishing\n";
+                break;
+            default:
+                break;
+        }  
+        break;
+
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
+    
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
         break;
@@ -198,10 +189,10 @@ void acqGui::paintBkd(HDC hdc, int rightCorner, int bottomCorner){
     Gdiplus::Graphics graphics(hdc);
 
     Gdiplus::LinearGradientBrush linGrBrush(
-    Gdiplus::Point(0, 0),
-    Gdiplus::Point(rightCorner +  (bottomCorner * std::tan(26.5)), bottomCorner), // rightCorner+(bottomCorner/2), bottomCorner // * (1 + std::tan(26.5))
-    Gdiplus::Color(255, 10, 53, 66),   // opaque blue
-    Gdiplus::Color(255, 21, 0, 42));  // opaque green
+                                Gdiplus::Point(0, 0),
+                                Gdiplus::Point(rightCorner +  (bottomCorner * std::tan(26.5)), bottomCorner), // rightCorner+(bottomCorner/2), bottomCorner // * (1 + std::tan(26.5))
+                                Gdiplus::Color(255, 10, 53, 66),   // opaque blue
+                                Gdiplus::Color(255, 21, 0, 42));  // opaque green
 
     Gdiplus::REAL relativeIntensities[] = {0.0f, 0.0f, 1.0f, 1.0f};
     Gdiplus::REAL relativePositions[]   = {0.0f, 0.7f, 0.8f, 0.8f};
@@ -212,6 +203,63 @@ void acqGui::paintBkd(HDC hdc, int rightCorner, int bottomCorner){
     // Gdiplus::Pen pen(&linGrBrush);
 
     graphics.FillRectangle(&linGrBrush, 0, 0, rightCorner, bottomCorner);
+
+}
+
+
+void acqGui::drawRecordRectangle(HWND hWnd){
+
+    HDC hdc = GetDC(hWnd);
+    RECT rect;
+    int bottomPlane_h = 20;
+
+    GetClientRect(hWnd, (LPRECT) &rect);
+
+    int rightPlane_l = rect.right / 7;
+
+
+    Gdiplus::Graphics graphics(hdc);
+    Gdiplus::Pen redPen(Gdiplus::Color(150, 255, 0, 0), 8);
+
+    graphics.DrawRectangle(&redPen, 0, 1, rect.right - rightPlane_l, rect.bottom - bottomPlane_h);
+}
+
+
+void acqGui::drawRecordRectangle(HDC hdc, int leftTop, int leftBottom, int width, int height){
+
+
+    Gdiplus::Graphics graphics(hdc);
+    Gdiplus::Pen redPen(Gdiplus::Color(150, 255, 0, 0), 8);
+
+    graphics.DrawRectangle(&redPen, leftTop, leftBottom, width, height);
+}
+
+
+void acqGui::eraseRecordRectangle(HWND hWnd){
+    HDC hdc = GetDC(hWnd);
+    RECT rect;
+    int bottomPlane_h = 20;
+
+    GetClientRect(hWnd, (LPRECT) &rect);
+
+    int rightPlane_l = rect.right / 7;
+
+    Gdiplus::Graphics graphics(hdc);
+
+    Gdiplus::LinearGradientBrush linGrBrush(
+                                Gdiplus::Point(0, 0),
+                                Gdiplus::Point(rect.right +  (rect.bottom * std::tan(26.5)), rect.bottom), 
+                                Gdiplus::Color(255, 10, 53, 66),   
+                                Gdiplus::Color(255, 21, 0, 42));  
+
+    Gdiplus::REAL relativeIntensities[] = {0.0f, 0.0f, 1.0f, 1.0f};
+    Gdiplus::REAL relativePositions[]   = {0.0f, 0.7f, 0.8f, 0.8f};
+
+    linGrBrush.SetBlend(relativeIntensities, relativePositions, 3);
+
+    Gdiplus::Pen mPen(&linGrBrush, 10);
+
+    graphics.DrawRectangle(&mPen, 0, 1, rect.right - rightPlane_l, rect.bottom - bottomPlane_h -1);
 
 }
 
@@ -341,6 +389,10 @@ int acqGui::paintHandler(HWND hWnd){
             }
         }
         
+        if(isRecording){
+            drawRecordRectangle(hdc, 0, 0, rect.right - rightPlane_l, rect.bottom - bottomPlane_h);
+        }
+
         // End application-specific layout section.
 
         EndPaint(hWnd, &ps);
@@ -466,7 +518,7 @@ int acqGui::guiHandler(){
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInst;
     // wcex.hIcon = LoadIcon(NULL, IDI_APPLICATION); // IDI_APPLICATION
-    wcex.hIcon = (HICON)LoadImageA(NULL, "icons\\acquire_icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED); // IDI_APPLICATION
+    wcex.hIcon = (HICON)LoadImageA(NULL, "icons\\acq_icon_large.ico", IMAGE_ICON, 256, 256, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED); // IDI_APPLICATION
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH); //(COLOR_WINDOW+1); //CreateSolidBrush(0x000000ff);
     wcex.lpszMenuName = NULL;
@@ -578,6 +630,8 @@ int acqGui::shutdownGui(){
         }
 
     }
+
+    isRecording = false;
 
     std::cout << "Window shut down" << std::endl;
 

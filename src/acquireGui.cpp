@@ -13,6 +13,7 @@ acqGui::acqGui(){
     terminateWindow = false;
     isFirstMsg = true;
     isRecording = false;
+    icounter = 0;
 
 }
 
@@ -26,6 +27,7 @@ LRESULT acqGui::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     RECT rect;
     TCHAR title[] = L"Channel ";
     TCHAR units[] = L"mV";
+    DRAWITEMSTRUCT* pdis;
 
     int maxPlotLength = 0;
     int minPlotLength = 200;
@@ -55,6 +57,25 @@ LRESULT acqGui::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         onCreate(hWnd);
         break;
     
+    case WM_DRAWITEM:
+        pdis = (DRAWITEMSTRUCT*) lParam;
+        switch(pdis->CtlID){
+            case BNID_RECORD:
+                createMyIcons(pdis);
+                break;
+            case BNID_MERGE:
+                // std::cout << "merge clicked\n";
+                break;
+            case BNID_BACK:
+                // std::cout << "back click\n";
+                break;
+            case BNID_PUBLISH:
+                // std::cout << "publishing\n";
+                break;
+            default:
+                break;
+        }
+
     case WM_PAINT:
         if(isFirstMsg){
             SendMessageA(hWnd, WM_CREATE, wParam,lParam);
@@ -289,6 +310,47 @@ int acqGui::onCreate(HWND hWnd){
 }
 
 
+int acqGui::createMyIcons(DRAWITEMSTRUCT* pdis){
+
+    RECT rect;
+
+    std::cout << "counter " << icounter << std::endl;
+    
+
+    // Use copy of rectangle:
+	rect = pdis->rcItem;
+
+    if(icounter<1){
+        std::cout << "test12\n";
+        icounter++;
+        ihonRecord = (HICON) LoadImageA(hInst, "icons\\record_icon_n.ico", IMAGE_ICON, 100, 75, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        // ihonRecord = (HICON) LoadIconA(hInst, "icons\\record_icon.ico");//, IMAGE_ICON, 205, 49, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        if (!ihonRecord) {
+			std::cout << "! hUpIconI NULL (createMyIcons)" << std::endl;
+			
+		}
+    }
+    std::cout << rect.right << ", " << rect.left << ", " << rect.bottom << ", " << rect.top << std::endl;
+
+// (int) 0.5 * (rect.right - rect.left - 205),
+// 		(int) 0.5 * (rect.bottom - rect.top - 49),
+    // Center the icon inside the control's rectangle:
+	if (!DrawIconEx(
+		pdis->hDC,
+		rect.left,
+        rect.top,
+		(HICON) ihonRecord,
+		100,
+		50,
+		0, NULL, DI_NORMAL)) 
+    {
+		std::cout <<"! %ld from DrawIconEx (createMyIcons) " << GetLastError() << std::endl;;
+	}
+
+
+    return 0;
+}
+
 
 int acqGui::createRightPanel(HWND hWnd, POINT startPoint){
 
@@ -300,7 +362,7 @@ int acqGui::createRightPanel(HWND hWnd, POINT startPoint){
     recordButton = CreateWindowEx(WS_EX_LEFT,
                                         L"BUTTON",
                                         L"Record",
-                                        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_OWNERDRAW, // BS_DEFPUSHBUTTON
                                         startPoint.x + rightPlaneOffset_x, startPoint.y , buttonLength, buttonHeight,
                                         hWnd,
                                         (HMENU) BNID_RECORD,
@@ -490,6 +552,11 @@ int acqGui::setMaxTime(float nTime){
 
 bool acqGui::guiStatus(){
     return isGuiRunning;
+}
+
+
+bool acqGui::recordStatus(){
+    return isRecording;
 }
 
 

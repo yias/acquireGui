@@ -33,6 +33,7 @@ class acqGui{
     HWND hWnd;                                              // the main window
     HWND rightPanelWnd;                                     // the right panel window
     HWND recordButton;                                      // the window of the record button
+    HICON ihonRecord;
     HWND mergeButton;                                       // the window of the merge button
 
 
@@ -83,6 +84,10 @@ class acqGui{
     // create initial lay-out
     int onCreate(HWND hWnd);
 
+    // create custom buttons
+    int createMyIcons(DRAWITEMSTRUCT* pdis);
+    int icounter;
+
     // handle changes on size
     int paintHandler(HWND hWnd);
 
@@ -99,6 +104,7 @@ public:
     ~acqGui();
 
     bool guiStatus();
+    bool recordStatus();
 
     int init();
 

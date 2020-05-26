@@ -32,12 +32,20 @@ class acqGui{
     HINSTANCE hInst;                                        // instance of the windows
     HWND hWnd;                                              // the main window
     HWND rightPanelWnd;                                     // the right panel window
+    
+    // button-related variables
     HWND recordButton;                                      // the window of the record button
-    HICON ihonRecord;
+    // icons for the record button
+    HICON iconRecord_off_up, iconRecord_off_up_hi, iconRecord_off_do, iconRecord_on_up, iconRecord_on_up_hi, iconRecord_on_do;
     HWND mergeButton;                                       // the window of the merge button
 
+    
+    int rightPlaneOffset_x;                                 // horizontal offset from the plots
+    int vertal_offset;                                      // vertical offset between buttons
+    int buttonLength;                                       // button length
+    int buttonHeight;                                       // button heigth
 
-    HBRUSH hbrGray;
+    // HBRUSH hbrGray;
 
     std::vector< std::vector<int> > plotClrs;               // background colors of the plots
 

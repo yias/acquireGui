@@ -88,12 +88,12 @@ LRESULT acqGui::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         switch(LOWORD(wParam)){
             case BNID_RECORD:
-                if(isRecording){
-                    isRecording = false;
+                if(!isRecording){
+                    // isRecording = false;
                     eraseRecordRectangle(hWnd);
                     std::cout << "stop recording\n";
                 }else{
-                    isRecording = true;
+                    // isRecording = true;
                     drawRecordRectangle(hWnd);
                     std::cout << "start recording\n";
                 }
@@ -314,23 +314,88 @@ int acqGui::createMyIcons(DRAWITEMSTRUCT* pdis){
 
     RECT rect;
 
-    std::cout << "counter " << icounter << std::endl;
+    // std::cout << "counter " << icounter << std::endl;
     
+    HICON hCurrIcon;
 
     // Use copy of rectangle:
 	rect = pdis->rcItem;
 
     if(icounter<1){
-        std::cout << "test12\n";
+
         icounter++;
-        ihonRecord = (HICON) LoadImageA(hInst, "icons\\record_icon_n.ico", IMAGE_ICON, 100, 75, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        iconRecord_off_up = (HICON) LoadImageA(hInst, "icons\\record_icon_off_up.ico", IMAGE_ICON, 200, 100, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
         // ihonRecord = (HICON) LoadIconA(hInst, "icons\\record_icon.ico");//, IMAGE_ICON, 205, 49, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
-        if (!ihonRecord) {
-			std::cout << "! hUpIconI NULL (createMyIcons)" << std::endl;
+        if (!iconRecord_off_up) {
+			std::cout << "! iconRecord_off_up NULL (createMyIcons)" << std::endl;
+			
+		}
+
+        iconRecord_off_up_hi = (HICON) LoadImageA(hInst, "icons\\record_icon_off_hl.ico", IMAGE_ICON, 200, 100, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        // ihonRecord = (HICON) LoadIconA(hInst, "icons\\record_icon.ico");//, IMAGE_ICON, 205, 49, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        if (!iconRecord_off_up_hi) {
+			std::cout << "! iconRecord_off_up_hi NULL (createMyIcons)" << std::endl;
+			
+		}
+
+        iconRecord_off_do = (HICON) LoadImageA(hInst, "icons\\record_icon_off_do.ico", IMAGE_ICON, 200, 100, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        // ihonRecord = (HICON) LoadIconA(hInst, "icons\\record_icon.ico");//, IMAGE_ICON, 205, 49, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        if (!iconRecord_off_do) {
+			std::cout << "! iconRecord_off_do NULL (createMyIcons)" << std::endl;
+			
+		}
+
+        iconRecord_on_up = (HICON) LoadImageA(hInst, "icons\\record_icon_on_up.ico", IMAGE_ICON, 200, 100, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        // ihonRecord = (HICON) LoadIconA(hInst, "icons\\record_icon.ico");//, IMAGE_ICON, 205, 49, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        if (!iconRecord_on_up) {
+			std::cout << "! iconRecord_on_up NULL (createMyIcons)" << std::endl;
+			
+		}
+        
+        iconRecord_on_up_hi = (HICON) LoadImageA(hInst, "icons\\record_icon_on_up_hl.ico", IMAGE_ICON, 200, 100, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        // ihonRecord = (HICON) LoadIconA(hInst, "icons\\record_icon.ico");//, IMAGE_ICON, 205, 49, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        if (!iconRecord_on_up_hi) {
+			std::cout << "! iconRecord_on_up_hi NULL (createMyIcons)" << std::endl;
+			
+		}
+        
+        iconRecord_on_do = (HICON) LoadImageA(hInst, "icons\\record_icon_on_do.ico", IMAGE_ICON, 200, 100, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        // ihonRecord = (HICON) LoadIconA(hInst, "icons\\record_icon.ico");//, IMAGE_ICON, 205, 49, LR_LOADFROMFILE | LR_VGACOLOR | LR_SHARED);
+        if (!iconRecord_on_do) {
+			std::cout << "! iconRecord_on_do NULL (createMyIcons)" << std::endl;
 			
 		}
     }
-    std::cout << rect.right << ", " << rect.left << ", " << rect.bottom << ", " << rect.top << std::endl;
+    // std::cout << rect.right << ", " << rect.left << ", " << rect.bottom << ", " << rect.top << std::endl;
+
+    // If the control's id is that of the "Up" button:
+	if (pdis->CtlID == BNID_RECORD) {
+		// If the button is selected, display the 
+		// "active" icon, else the "inactive" icon:
+        
+		if (pdis->itemState & ODS_SELECTED){
+            // hCurrIcon = iconRecord_off_do;
+            if (isRecording){
+                // std::cout << " ODS_SELECTED, isRecording " << isRecording << std::endl;
+                hCurrIcon = iconRecord_on_do;
+                isRecording = false;
+            }else{
+                // std::cout << " ODS_SELECTED, isRecording " << isRecording << std::endl;
+                hCurrIcon = iconRecord_off_do;
+                isRecording = true;
+            }
+        }
+		else {
+            // hCurrIcon = iconRecord_off_up;
+            if (isRecording){
+                // std::cout << " not ODS_SELECTED, isRecording " << isRecording << std::endl;
+                hCurrIcon = iconRecord_on_up;
+            }else{
+                // std::cout << " not ODS_SELECTED, isRecording " << isRecording << std::endl;
+                hCurrIcon = iconRecord_off_up;  
+            }
+        }
+	}
 
 // (int) 0.5 * (rect.right - rect.left - 205),
 // 		(int) 0.5 * (rect.bottom - rect.top - 49),
@@ -339,9 +404,9 @@ int acqGui::createMyIcons(DRAWITEMSTRUCT* pdis){
 		pdis->hDC,
 		rect.left,
         rect.top,
-		(HICON) ihonRecord,
+		(HICON) hCurrIcon,
+		200,
 		100,
-		50,
 		0, NULL, DI_NORMAL)) 
     {
 		std::cout <<"! %ld from DrawIconEx (createMyIcons) " << GetLastError() << std::endl;;
@@ -354,15 +419,15 @@ int acqGui::createMyIcons(DRAWITEMSTRUCT* pdis){
 
 int acqGui::createRightPanel(HWND hWnd, POINT startPoint){
 
-    int rightPlaneOffset_x = 30;
-    int vertal_offset = 30;
-    int buttonLength = 100;
-    int buttonHeight = 50;
+    // int rightPlaneOffset_x = 30;
+    // int vertal_offset = 30;
+    // int buttonLength = 100;
+    // int buttonHeight = 50;
   
     recordButton = CreateWindowEx(WS_EX_LEFT,
                                         L"BUTTON",
                                         L"Record",
-                                        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_OWNERDRAW, // BS_DEFPUSHBUTTON
+                                        WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, // BS_DEFPUSHBUTTON
                                         startPoint.x + rightPlaneOffset_x, startPoint.y , buttonLength, buttonHeight,
                                         hWnd,
                                         (HMENU) BNID_RECORD,
@@ -465,9 +530,9 @@ int acqGui::paintHandler(HWND hWnd){
 
 int acqGui::moveRightPanel(HWND hWnd, int leftPos, int topPos){
 
-    int vertal_offset = 30;
-    int buttonLength = 100;
-    int buttonHeight = 50;
+    // int vertal_offset = 30;
+    // int buttonLength = 100;
+    // int buttonHeight = 50;
 
     // move record button
     HWND bhndr = GetDlgItem(hWnd, BNID_RECORD);
@@ -500,6 +565,11 @@ int acqGui::init(){
     // FreeConsole();
 
     maxNbSamples = frequency * maxTime;
+
+    rightPlaneOffset_x = 30;
+    vertal_offset = 30;
+    buttonLength = 200;
+    buttonHeight = 100;
 
     // const wchar_t CLASS_NAME[]  = L"Sample Window Class";
 
